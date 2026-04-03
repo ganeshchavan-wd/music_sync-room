@@ -25,11 +25,9 @@
       transition: background 0.4s ease, color 0.4s ease;
     }
 
-    /* 🧊 Glass container */
     .container {
       position: relative;
       z-index: 1;
-
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(12px);
       padding: 25px;
@@ -40,12 +38,10 @@
       background: rgba(0, 0, 0, 0.4);
     }
 
-    /* 🎵 Title */
     #title {
       text-align: center;
       font-size: 36px;
       font-family: 'Poppins', sans-serif;
-
       background: linear-gradient(45deg, #00c853, #00e5ff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -65,27 +61,21 @@
       background: rgb(164, 156, 154);
     }
 
-    /* 🌙 FIXED THEME BUTTON */
     #themeBtn {
       position: fixed;
       top: 20px;
       right: 20px;
-
       width: 50px;
       height: 50px;
       border-radius: 50%;
       background: black;
-
       font-size: 20px;
       border: none;
       cursor: pointer;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
-      z-index: 9999; /* 🔥 IMPORTANT FIX */
-
+      z-index: 9999;
       transition: all 0.3s ease;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
@@ -94,7 +84,6 @@
       transform: scale(1.1) rotate(10deg);
     }
 
-    /* 📺 Player */
     #player {
       width: 90vw;
       height: 70vh;
@@ -111,13 +100,43 @@
     .center {
       text-align: center;
     }
+
+    /* 👇 HOVER NAMES */
+    #credits {
+      margin-top: 15px;
+      text-align: left;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+       color: black;
+    }
+
+    /* ✅ ONLY show when cursor is on names */
+    #credits:hover {
+      opacity: 1;
+    }
+
+    .names {
+      font-size: 16px;
+      font-weight: bold;
+      color: #0b0d0d;
+      animation: floatText 2s ease-in-out infinite alternate;
+    }
+
+    body.dark .names {
+      color: #00ffcc;
+    }
+
+    @keyframes floatText {
+      from { transform: translateY(0px); }
+      to { transform: translateY(-5px); }
+    }
+
   </style>
 </head>
 
 <body>
 
-<!-- 🌙 DARK MODE BUTTON -->
-<button onclick="toggleTheme()" id="themeBtn"></button>
+<button onclick="toggleTheme()" id="themeBtn">🌙</button>
 
 <div class="container">
 
@@ -142,13 +161,20 @@
 
 <div id="player"></div>
 
+<div id="credits">
+  <p class="names">Owner <br>👩‍💻 Chinamyi Udata(Sis) <br>👨‍💻 Ganesh Chavan(Bro) </p>
 </div>
 
-<!-- 🔌 Scripts -->
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
 
 <script>
+  function toggleTheme() {
+    document.body.classList.toggle("dark");
+  }
+
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
   document.body.appendChild(tag);
