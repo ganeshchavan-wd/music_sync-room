@@ -101,16 +101,14 @@
       text-align: center;
     }
 
-    /* 👇 HOVER NAMES */
     #credits {
       margin-top: 15px;
       text-align: left;
       opacity: 0;
       transition: opacity 0.4s ease;
-       color: black;
+      color: black;
     }
 
-    /* ✅ ONLY show when cursor is on names */
     #credits:hover {
       opacity: 1;
     }
@@ -130,7 +128,6 @@
       from { transform: translateY(0px); }
       to { transform: translateY(-5px); }
     }
-
   </style>
 </head>
 
@@ -162,10 +159,13 @@
 <div id="player"></div>
 
 <div id="credits">
-  <p class="names">Owner <br>👩‍💻 Chinamyi Udata(Sis) <br>👨‍💻 Ganesh Chavan(Bro) </p>
+  <p class="names">Owner <br>👩‍💻 Chinamyi Udata(Sis) <br>👨‍💻 Ganesh Chavan(Bro)</p>
 </div>
 
 </div>
+
+<!-- ✅ FIX: Load YouTube API DIRECTLY -->
+<script src="https://www.youtube.com/iframe_api"></script>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
@@ -174,10 +174,6 @@
   function toggleTheme() {
     document.body.classList.toggle("dark");
   }
-
-  var tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.body.appendChild(tag);
 </script>
 
 <script src="app.js"></script>
