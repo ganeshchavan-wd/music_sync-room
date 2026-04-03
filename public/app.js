@@ -3,7 +3,7 @@ const socket = io("https://music-sync-room.onrender.com", {
     reconnection: true
 });
 
-// ✅ IMPORTANT FIX (PeerJS cloud server)
+// ✅ PeerJS FIX (production ready)
 const peer = new Peer(undefined, {
     host: "0.peerjs.com",
     port: 443,
@@ -88,7 +88,13 @@ socket.on("userLeft", (peerId) => {
 peer.on("call", async (call) => {
 
     if (!localStream) {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
     }
 
     call.answer(localStream);
@@ -96,7 +102,14 @@ peer.on("call", async (call) => {
     call.on("stream", (stream) => {
         const audio = new Audio();
         audio.srcObject = stream;
-        audio.play();
+
+        // ✅ AUTOPLAY FIX
+        audio.play().catch(() => {
+            console.log("Autoplay blocked, waiting click...");
+            document.body.addEventListener("click", () => {
+                audio.play();
+            }, { once: true });
+        });
     });
 });
 
@@ -107,15 +120,28 @@ async function startCall() {
     isCallStarted = true;
 
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // ✅ unlock browser audio
+        const unlock = new Audio();
+        unlock.play().catch(() => {});
+
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
 
         localStream.getAudioTracks().forEach(track => {
             track.enabled = !isMuted;
         });
 
+        console.log("Mic started ✅");
+
         connectToAllUsers();
 
     } catch (err) {
+        console.error(err);
         alert("Microphone permission denied!");
     }
 }
@@ -138,7 +164,13 @@ function connectToUser(user) {
     call.on("stream", (stream) => {
         const audio = new Audio();
         audio.srcObject = stream;
-        audio.play();
+
+        // ✅ AUTOPLAY FIX
+        audio.play().catch(() => {
+            document.body.addEventListener("click", () => {
+                audio.play();
+            }, { once: true });
+        });
     });
 }
 
@@ -168,12 +200,12 @@ function toggleTheme() {
 }
 
 // =======================
-// 🎬 YOUTUBE FIX (NO ERROR)
+// 🎬 YOUTUBE FIX
 // =======================
 
 let player;
 
-// ✅ wait for API properly
+// wait for API
 function waitForYT() {
     return new Promise(resolve => {
         const check = setInterval(() => {
@@ -185,7 +217,7 @@ function waitForYT() {
     });
 }
 
-// ✅ INIT PLAYER SAFELY
+// init player
 (async function () {
     await waitForYT();
 
@@ -197,7 +229,7 @@ function waitForYT() {
     console.log("YouTube Ready ✅");
 })();
 
-// 🎥 GET VIDEO ID
+// get id
 function getVideoId(url) {
     try {
         const u = new URL(url);
@@ -207,7 +239,7 @@ function getVideoId(url) {
     }
 }
 
-// ▶ LOAD VIDEO
+// load
 function loadYouTube() {
 
     if (!player) {
@@ -226,7 +258,7 @@ function loadYouTube() {
     socket.emit("loadVideo", id);
 }
 
-// ▶ PLAY
+// play
 function playVideo() {
     if (!player) return;
 
@@ -234,7 +266,7 @@ function playVideo() {
     socket.emit("playVideo", player.getCurrentTime());
 }
 
-// ⏸ PAUSE
+// pause
 function pauseVideo() {
     if (!player) return;
 
@@ -242,7 +274,7 @@ function pauseVideo() {
     socket.emit("pauseVideo");
 }
 
-// 🔄 SYNC
+// sync
 socket.on("loadVideo", id => player && player.loadVideoById(id));
 
 socket.on("playVideo", t => {
