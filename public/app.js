@@ -3,11 +3,23 @@ const socket = io("https://music-sync-room.onrender.com", {
     reconnection: true
 });
 
-// ✅ PeerJS FIX (production ready)
+// ✅ FINAL FIX: STUN + TURN (IMPORTANT)
 const peer = new Peer(undefined, {
-    host: "0.peerjs.com",
-    port: 443,
-    secure: true
+    config: {
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            {
+                urls: "turn:openrelay.metered.ca:80",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            },
+            {
+                urls: "turn:openrelay.metered.ca:443",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            }
+        ]
+    }
 });
 
 // 🌐 URL DATA
@@ -15,7 +27,7 @@ const params = new URLSearchParams(window.location.search);
 let username = params.get("name");
 let roomId = params.get("room");
 
-// ✅ fallback
+// fallback
 if (!username) username = "Guest_" + Math.floor(Math.random() * 1000);
 if (!roomId) roomId = Math.random().toString(36).substring(2, 7);
 
@@ -30,14 +42,12 @@ let isCallStarted = false;
 // 📄 PAGE LOAD
 document.addEventListener("DOMContentLoaded", () => {
 
-    // 🌙 THEME
     const savedTheme = localStorage.getItem("theme");
     document.body.classList.toggle("dark", savedTheme !== "light");
 
     const btn = document.getElementById("themeBtn");
     btn.innerText = document.body.classList.contains("dark") ? "☀️" : "🌙";
 
-    // DISPLAY
     document.getElementById("status").innerText = "👤 " + username;
     document.getElementById("roomDisplay").innerText = "📌 Room ID: " + roomId;
 });
@@ -100,12 +110,14 @@ peer.on("call", async (call) => {
     call.answer(localStream);
 
     call.on("stream", (stream) => {
-        const audio = new Audio();
-        audio.srcObject = stream;
 
-        // ✅ AUTOPLAY FIX
+        const audio = document.createElement("audio");
+        audio.srcObject = stream;
+        audio.autoplay = true;
+
+        document.body.appendChild(audio);
+
         audio.play().catch(() => {
-            console.log("Autoplay blocked, waiting click...");
             document.body.addEventListener("click", () => {
                 audio.play();
             }, { once: true });
@@ -120,7 +132,7 @@ async function startCall() {
     isCallStarted = true;
 
     try {
-        // ✅ unlock browser audio
+        // unlock audio
         const unlock = new Audio();
         unlock.play().catch(() => {});
 
@@ -159,13 +171,18 @@ function connectToUser(user) {
     if (connectedPeers.has(user.peerId)) return;
     connectedPeers.add(user.peerId);
 
+    console.log("Calling:", user.peerId);
+
     const call = peer.call(user.peerId, localStream);
 
     call.on("stream", (stream) => {
-        const audio = new Audio();
-        audio.srcObject = stream;
 
-        // ✅ AUTOPLAY FIX
+        const audio = document.createElement("audio");
+        audio.srcObject = stream;
+        audio.autoplay = true;
+
+        document.body.appendChild(audio);
+
         audio.play().catch(() => {
             document.body.addEventListener("click", () => {
                 audio.play();
@@ -200,7 +217,7 @@ function toggleTheme() {
 }
 
 // =======================
-// 🎬 YOUTUBE FIX
+// 🎬 YOUTUBE
 // =======================
 
 let player;
@@ -217,7 +234,7 @@ function waitForYT() {
     });
 }
 
-// init player
+// init
 (async function () {
     await waitForYT();
 
@@ -243,14 +260,14 @@ function getVideoId(url) {
 function loadYouTube() {
 
     if (!player) {
-        alert("Wait 2 seconds and try again");
+        alert("Wait 2 seconds...");
         return;
     }
 
     const id = getVideoId(document.getElementById("youtubeUrl").value);
 
     if (!id) {
-        alert("Invalid YouTube URL");
+        alert("Invalid URL");
         return;
     }
 
