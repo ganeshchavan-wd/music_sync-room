@@ -1,4 +1,6 @@
-const socket = io("https://music-sync-room.onrender.com");
+const socket = io("https://music-sync-room.onrender.com", {
+    transports: ["websocket"]
+});
 const peer = new Peer();
 
 // 🌐 URL DATA
