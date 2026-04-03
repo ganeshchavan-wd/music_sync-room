@@ -1,7 +1,7 @@
-// 🌐 SOCKET (Render server)
+// 🌐 SOCKET (Render backend)
 const socket = io("https://music-sync-room.onrender.com");
 
-// 🌐 PEER (with STUN/TURN → IMPORTANT)
+// 🌐 PEER (STUN + TURN → REQUIRED FOR INTERNET)
 const peer = new Peer({
     config: {
         iceServers: [
@@ -35,18 +35,6 @@ let isCallStarted = false;
 // ==========================
 document.addEventListener("DOMContentLoaded", () => {
 
-    // 🌙 THEME
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light") {
-        document.body.classList.remove("dark");
-    } else {
-        document.body.classList.add("dark");
-    }
-
-    const btn = document.getElementById("themeBtn");
-    btn.innerText = document.body.classList.contains("dark") ? "☀️" : "🌙";
-
-    // UI
     document.getElementById("status").innerText = "👤 " + username;
     document.getElementById("roomDisplay").innerText =
         "📌 Room ID: " + roomId;
@@ -112,7 +100,7 @@ socket.on("userLeft", (peerId) => {
 });
 
 // ==========================
-// 🔊 AUDIO PLAY FUNCTION (FINAL FIX)
+// 🔊 AUDIO PLAY FIX
 // ==========================
 function playAudioStream(stream, id) {
 
@@ -126,9 +114,8 @@ function playAudioStream(stream, id) {
     }
 
     audio.srcObject = stream;
-    audio.muted = false;
-    audio.volume = 1;
 
+    // 🔥 autoplay fix
     audio.play().catch(() => {
         document.body.addEventListener("click", () => {
             audio.play();
@@ -170,10 +157,6 @@ async function startCall() {
         });
 
         console.log("Mic started ✅");
-
-        localStream.getAudioTracks().forEach(track => {
-            track.enabled = !isMuted;
-        });
 
         connectToAllUsers();
 
@@ -224,26 +207,15 @@ function toggleMute() {
 }
 
 // ==========================
-// 🌙 DARK MODE
-// ==========================
-function toggleTheme() {
-    document.body.classList.toggle("dark");
-
-    const isDark = document.body.classList.contains("dark");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-
-    const btn = document.getElementById("themeBtn");
-    btn.innerText = isDark ? "☀️" : "🌙";
-}
-
-// ==========================
-// 🎬 YOUTUBE
+// 🎬 YOUTUBE FIX (FINAL)
 // ==========================
 let player;
 let playerReady = false;
 
 window.onYouTubeIframeAPIReady = function () {
     player = new YT.Player('player', {
+        height: '400',
+        width: '100%',
         events: {
             onReady: () => {
                 playerReady = true;
@@ -263,13 +235,15 @@ function getVideoId(url) {
 }
 
 function loadYouTube() {
+
     if (!playerReady) {
-        alert("Player not ready yet!");
+        alert("Wait 2 seconds, player loading...");
         return;
     }
 
     const id = getVideoId(document.getElementById("youtubeUrl").value);
-    if (!id) return alert("Invalid URL");
+
+    if (!id) return alert("Invalid link");
 
     player.loadVideoById(id);
     socket.emit("loadVideo", id);
