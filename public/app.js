@@ -6,45 +6,40 @@ const params = new URLSearchParams(window.location.search);
 let username = params.get("name");
 let roomId = params.get("room");
 
-// 🚨 FALLBACK (IMPORTANT FIX)
-if (!username) username = "Guest";
-if (!roomId) roomId = "default";
+// ✅ FIX: fallback but also ensure unique room usage
+if (!username) username = "Guest_" + Math.floor(Math.random() * 1000);
+if (!roomId) roomId = Math.random().toString(36).substring(2, 7);
 
 // 🎯 STATE
 let localStream;
 let pendingUsers = [];
 let connectedPeers = new Set();
 
-let peerReady = false;
 let isMuted = false;
 let isCallStarted = false;
+let peerIdReady = false;
 
 // 📄 PAGE LOAD
 document.addEventListener("DOMContentLoaded", () => {
 
     // 🌙 THEME
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light") {
-        document.body.classList.remove("dark");
-    } else {
-        document.body.classList.add("dark");
-    }
+    document.body.classList.toggle("dark", savedTheme !== "light");
 
     const btn = document.getElementById("themeBtn");
     btn.innerText = document.body.classList.contains("dark") ? "☀️" : "🌙";
 
     // 🧾 DISPLAY INFO
     document.getElementById("status").innerText = "👤 " + username;
-
-    document.getElementById("roomDisplay").innerText =
-        "📌 Room ID: " + roomId;
+    document.getElementById("roomDisplay").innerText = "📌 Room ID: " + roomId;
 });
 
 // 🔑 PEER READY → JOIN ROOM
-peer.on("open", () => {
-    console.log("Peer ready");
+peer.on("open", (id) => {
+    console.log("Peer connected:", id);
+    peerIdReady = true;
 
-    socket.emit("joinRoom", roomId, peer.id, username);
+    socket.emit("joinRoom", roomId, id, username);
 });
 
 // 👑 OWNER
@@ -131,6 +126,8 @@ function connectToAllUsers() {
 // 🔥 CONNECT SINGLE USER
 function connectToUser(user) {
 
+    if (!localStream) return;
+
     if (connectedPeers.has(user.peerId)) return;
     connectedPeers.add(user.peerId);
 
@@ -172,8 +169,12 @@ function toggleTheme() {
 let player;
 let isYTReady = false;
 
+// ✅ FIX: Proper player init
 window.onYouTubeIframeAPIReady = function () {
-    player = new YT.Player('player');
+    player = new YT.Player('player', {
+        height: '400',
+        width: '800'
+    });
     isYTReady = true;
 };
 
@@ -189,10 +190,18 @@ function getVideoId(url) {
 
 // ▶ LOAD VIDEO
 function loadYouTube() {
-    if (!isYTReady) return alert("Player not ready yet!");
+
+    if (!isYTReady) {
+        alert("Player not ready yet!");
+        return;
+    }
 
     const id = getVideoId(document.getElementById("youtubeUrl").value);
-    if (!id) return alert("Invalid URL");
+
+    if (!id) {
+        alert("Invalid YouTube URL");
+        return;
+    }
 
     player.loadVideoById(id);
     socket.emit("loadVideo", id);
@@ -201,6 +210,7 @@ function loadYouTube() {
 // ▶ PLAY
 function playVideo() {
     if (!player) return;
+
     player.playVideo();
     socket.emit("playVideo", player.getCurrentTime());
 }
@@ -208,15 +218,18 @@ function playVideo() {
 // ⏸ PAUSE
 function pauseVideo() {
     if (!player) return;
+
     player.pauseVideo();
     socket.emit("pauseVideo");
 }
 
 // 🔄 SYNC
 socket.on("loadVideo", id => player && player.loadVideoById(id));
+
 socket.on("playVideo", t => {
     if (!player) return;
     player.seekTo(t);
     player.playVideo();
 });
+
 socket.on("pauseVideo", () => player && player.pauseVideo());
