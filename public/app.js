@@ -1,14 +1,21 @@
 const socket = io("https://music-sync-room.onrender.com", {
-    transports: ["websocket"]
+    transports: ["websocket"],
+    reconnection: true
 });
-const peer = new Peer();
+
+// ✅ IMPORTANT FIX (PeerJS cloud server)
+const peer = new Peer(undefined, {
+    host: "0.peerjs.com",
+    port: 443,
+    secure: true
+});
 
 // 🌐 URL DATA
 const params = new URLSearchParams(window.location.search);
 let username = params.get("name");
 let roomId = params.get("room");
 
-// ✅ FIX: fallback but also ensure unique room usage
+// ✅ fallback
 if (!username) username = "Guest_" + Math.floor(Math.random() * 1000);
 if (!roomId) roomId = Math.random().toString(36).substring(2, 7);
 
@@ -19,7 +26,6 @@ let connectedPeers = new Set();
 
 let isMuted = false;
 let isCallStarted = false;
-let peerIdReady = false;
 
 // 📄 PAGE LOAD
 document.addEventListener("DOMContentLoaded", () => {
@@ -31,16 +37,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("themeBtn");
     btn.innerText = document.body.classList.contains("dark") ? "☀️" : "🌙";
 
-    // 🧾 DISPLAY INFO
+    // DISPLAY
     document.getElementById("status").innerText = "👤 " + username;
     document.getElementById("roomDisplay").innerText = "📌 Room ID: " + roomId;
 });
 
-// 🔑 PEER READY → JOIN ROOM
+// 🔑 PEER READY
 peer.on("open", (id) => {
     console.log("Peer connected:", id);
-    peerIdReady = true;
-
     socket.emit("joinRoom", roomId, id, username);
 });
 
@@ -81,17 +85,13 @@ socket.on("userLeft", (peerId) => {
 });
 
 // 🎤 RECEIVE CALL
-peer.on("call", (call) => {
+peer.on("call", async (call) => {
 
     if (!localStream) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                localStream = stream;
-                call.answer(localStream);
-            });
-    } else {
-        call.answer(localStream);
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     }
+
+    call.answer(localStream);
 
     call.on("stream", (stream) => {
         const audio = new Audio();
@@ -167,18 +167,35 @@ function toggleTheme() {
     btn.innerText = isDark ? "☀️" : "🌙";
 }
 
-// 🎬 YOUTUBE
-let player;
-let isYTReady = false;
+// =======================
+// 🎬 YOUTUBE FIX (NO ERROR)
+// =======================
 
-// ✅ FIX: Proper player init
-window.onYouTubeIframeAPIReady = function () {
+let player;
+
+// ✅ wait for API properly
+function waitForYT() {
+    return new Promise(resolve => {
+        const check = setInterval(() => {
+            if (window.YT && window.YT.Player) {
+                clearInterval(check);
+                resolve();
+            }
+        }, 100);
+    });
+}
+
+// ✅ INIT PLAYER SAFELY
+(async function () {
+    await waitForYT();
+
     player = new YT.Player('player', {
         height: '400',
         width: '800'
     });
-    isYTReady = true;
-};
+
+    console.log("YouTube Ready ✅");
+})();
 
 // 🎥 GET VIDEO ID
 function getVideoId(url) {
@@ -193,8 +210,8 @@ function getVideoId(url) {
 // ▶ LOAD VIDEO
 function loadYouTube() {
 
-    if (!isYTReady) {
-        alert("Player not ready yet!");
+    if (!player) {
+        alert("Wait 2 seconds and try again");
         return;
     }
 
