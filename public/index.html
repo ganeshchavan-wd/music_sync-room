@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Join Music Room</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      margin: 0;
+    }
+
+    .box {
+      background: rgba(0,0,0,0.6);
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      width: 320px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      width: 90%;
+    }
+
+    button {
+      background: #00c853;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🎵 Music Sync Room</h2>
+
+  <input id="username" placeholder="Enter your name">
+
+  <button onclick="createRoom()">🚀 Create Room</button>
+
+  <input id="roomId" placeholder="Enter Room ID">
+  <button onclick="joinRoom()">🔗 Join Room</button>
+</div>
+
+<script>
+function createRoom() {
+  const name = document.getElementById("username").value.trim();
+  if (!name) return alert("Enter name");
+
+  const room = Math.random().toString(36).substring(2, 8);
+
+  window.location.href = `room.html?name=${name}&room=${room}`;
+}
+
+function joinRoom() {
+  const name = document.getElementById("username").value.trim();
+  const room = document.getElementById("roomId").value.trim();
+
+  if (!name || !room) return alert("Enter all fields");
+
+  window.location.href = `room.html?name=${name}&room=${room}`;
+}
+</script>
+
+</body>
+</html>
