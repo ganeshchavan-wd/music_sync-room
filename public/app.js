@@ -207,13 +207,23 @@ function toggleMute() {
 }
 
 // ==========================
-// 🎬 YOUTUBE SYNC (FINAL FIX)
+// 🎬 YOUTUBE FINAL FIX
 // ==========================
 
-let player;
+let player = null;
 let playerReady = false;
 
-window.onYouTubeIframeAPIReady = function () {
+// 🔥 WAIT UNTIL API LOADS
+function waitForYT() {
+    if (window.YT && window.YT.Player) {
+        initPlayer();
+    } else {
+        setTimeout(waitForYT, 300);
+    }
+}
+
+// 🔥 INIT PLAYER
+function initPlayer() {
     player = new YT.Player('player', {
         height: '400',
         width: '100%',
@@ -221,10 +231,18 @@ window.onYouTubeIframeAPIReady = function () {
             onReady: () => {
                 playerReady = true;
                 console.log("YouTube Ready ✅");
+
+                // enable buttons
+                document.querySelectorAll(".yt-btn").forEach(btn => {
+                    btn.disabled = false;
+                });
             }
         }
     });
-};
+}
+
+// 🔥 START WAITING
+waitForYT();
 
 function getVideoId(url) {
     try {
@@ -235,30 +253,56 @@ function getVideoId(url) {
     }
 }
 
-// 🔥 LOAD VIDEO (SYNC TO ALL USERS)
+// 🔥 LOAD VIDEO
 function loadYouTube() {
 
-    if (!playerReady) return alert("Wait for player...");
+    if (!playerReady) {
+        alert("Player still loading... try again in 2 sec");
+        return;
+    }
 
     const id = getVideoId(document.getElementById("youtubeUrl").value);
-       if (!id) return alert("Invalid link");
+
+    if (!id) {
+        alert("Invalid YouTube link");
+        return;
+    }
 
     player.loadVideoById(id);
     socket.emit("loadVideo", id);
 }
 
+// 🔥 PLAY
 function playVideo() {
     if (!playerReady) return;
+
     player.playVideo();
     socket.emit("playVideo", player.getCurrentTime());
 }
 
+// 🔥 PAUSE
 function pauseVideo() {
     if (!playerReady) return;
+
     player.pauseVideo();
     socket.emit("pauseVideo");
 }
 
+// 🔥 SYNC FROM SERVER
+socket.on("loadVideo", id => {
+    if (playerReady) player.loadVideoById(id);
+});
+
+socket.on("playVideo", t => {
+    if (playerReady) {
+        player.seekTo(t);
+        player.playVideo();
+    }
+});
+
+socket.on("pauseVideo", () => {
+    if (playerReady) player.pauseVideo();
+});
 // ==========================
 // 🔄 SYNC
 // ==========================
