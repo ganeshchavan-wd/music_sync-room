@@ -85,7 +85,7 @@ socket.on("existingUsers", (users) => {
 
  if (localStream) {
     setTimeout(() => {
-        connectToUser(data);
+        connectToAllUser();
     }, 1000); // 🔥 delay ensures peer is ready
 }
 });
@@ -101,7 +101,7 @@ socket.on("userJoined", (data) => {
 
     if (localStream) {
     setTimeout(() => {
-        connectToUser(data);
+        connectToAllUser();
     }, 1000); // 🔥 delay ensures peer is ready
 }
 });
@@ -121,7 +121,9 @@ function playAudioStream(stream, id) {
     if (!audio) {
         audio = document.createElement("audio");
         audio.id = "audio_" + id;
-        audio.autoplay = true;
+       audio.autoplay = true;
+audio.controls = true;   // 👈 ADD THIS
+audio.volume = 1;
         audio.playsInline = true;
         document.body.appendChild(audio);
     }
@@ -169,9 +171,11 @@ async function startCall() {
 
         console.log("Mic started ✅");
 
-       setTimeout(() => {
+      if (peerReady) {
     connectToAllUsers();
-}, 1000);
+} else {
+    setTimeout(() => connectToAllUsers(), 1000);
+}
 
     } catch (err) {
         alert("Microphone permission denied!");
