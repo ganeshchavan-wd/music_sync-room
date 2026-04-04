@@ -1,8 +1,16 @@
+window.addEventListener("click", () => {
+    document.querySelectorAll("audio").forEach(a => {
+        a.play().catch(() => {});
+    });
+});
 // 🌐 SOCKET (Render backend)
 const socket = io("https://music-sync-room.onrender.com");
 
 // 🌐 PEER (STUN + TURN → REQUIRED FOR INTERNET)
-const peer = new Peer({
+const peer = new Peer(undefined, {
+    host: "0.peerjs.com",
+    secure: true,
+    port: 443,
     config: {
         iceServers: [
             { urls: "stun:stun.l.google.com:19302" },
@@ -75,9 +83,11 @@ socket.on("roomOwner", (owner) => {
 socket.on("existingUsers", (users) => {
     pendingUsers = users.filter(u => u.peerId !== peer.id);
 
-    if (isCallStarted && localStream) {
-        connectToAllUsers();
-    }
+ if (localStream) {
+    setTimeout(() => {
+        connectToUser(data);
+    }, 1000); // 🔥 delay ensures peer is ready
+}
 });
 
 socket.on("userJoined", (data) => {
@@ -89,9 +99,11 @@ socket.on("userJoined", (data) => {
     document.getElementById("status").innerHTML +=
         `<br>👤 ${data.username} joined`;
 
-    if (isCallStarted && localStream) {
+    if (localStream) {
+    setTimeout(() => {
         connectToUser(data);
-    }
+    }, 1000); // 🔥 delay ensures peer is ready
+}
 });
 
 socket.on("userLeft", (peerId) => {
@@ -110,21 +122,20 @@ function playAudioStream(stream, id) {
         audio = document.createElement("audio");
         audio.id = "audio_" + id;
         audio.autoplay = true;
+        audio.playsInline = true;
         document.body.appendChild(audio);
     }
 
     audio.srcObject = stream;
 
-    // 🔥 autoplay fix
-    audio.play().catch(() => {
-        document.body.addEventListener("click", () => {
-            audio.play();
-        }, { once: true });
-    });
+    audio.onloadedmetadata = () => {
+        audio.play().catch(() => {
+            console.log("User interaction required 🔊");
+        });
+    };
 
     console.log("Playing audio from:", id);
 }
-
 // ==========================
 // 📞 RECEIVE CALL
 // ==========================
@@ -158,7 +169,9 @@ async function startCall() {
 
         console.log("Mic started ✅");
 
-        connectToAllUsers();
+       setTimeout(() => {
+    connectToAllUsers();
+}, 1000);
 
     } catch (err) {
         alert("Microphone permission denied!");
