@@ -1,75 +1,282 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Join Music Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --bg:      #0e0f17;
+      --card:    #181926;
+      --border:  #2a2b3d;
+      --accent:  #7c6ffd;
+      --accent2: #4fc3f7;
+      --text:    #e4e5f0;
+      --muted:   #6b6d85;
+      --radius:  14px;
+    }
+
+    body.light {
+      --bg:        #eef0fa;
+      --card:      #ffffff;
+      --border:    #dcdff0;
+      --accent:    #5b4ff0;
+      --accent2:   #0ea5e9;
+      --text:      #16172b;
+      --muted:     #7b7e9a;
+      --input-bg:  #f5f6fd;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: Arial;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      color: white;
-      margin: 0;
+      justify-content: center;
+      padding: 20px;
+      transition: background 0.4s, color 0.4s;
     }
 
-    .box {
-      background: rgba(0,0,0,0.6);
-      padding: 30px;
-      border-radius: 15px;
-      text-align: center;
-      width: 320px;
+    body.light {
+      background-image:
+        radial-gradient(ellipse 60% 50% at 10% 0%, rgba(111,99,255,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 90% 100%, rgba(14,165,233,0.09) 0%, transparent 70%);
     }
 
-    input, button {
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: none;
-      width: 90%;
-    }
-
-    button {
-      background: #00c853;
-      color: white;
+    /* ── THEME BTN ── */
+    #themeBtn {
+      position: fixed;
+      top: 18px; right: 18px;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-size: 18px;
       cursor: pointer;
+      display: grid; place-items: center;
+      z-index: 999;
+      transition: transform 0.3s, box-shadow 0.3s;
+      color: var(--text);
+    }
+    #themeBtn:hover { transform: rotate(15deg); box-shadow: 0 0 14px rgba(91,79,240,0.35); }
+
+    /* ── CARD ── */
+    .box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+      transition: background 0.4s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    body.light .box {
+      box-shadow: 0 4px 32px rgba(80,70,200,0.09), 0 1px 4px rgba(0,0,0,0.05);
+      border-top: 2.5px solid transparent;
+      background-image: linear-gradient(var(--card), var(--card)),
+                        linear-gradient(90deg, var(--accent), var(--accent2));
+      background-origin: border-box;
+      background-clip: padding-box, border-box;
+    }
+
+    /* ── ICON ── */
+    .icon-ring {
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent);
+      display: grid; place-items: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+      box-shadow: 0 0 18px rgba(124,111,253,0.2);
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+    @keyframes pulse-ring {
+      0%,100% { box-shadow: 0 0 14px rgba(124,111,253,0.2); }
+      50%      { box-shadow: 0 0 28px rgba(124,111,253,0.45); }
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 22px 0;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider span {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── LABEL ── */
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-align: left;
+      margin-bottom: 6px;
+    }
+
+    /* ── INPUT ── */
+    .field {
+      margin-bottom: 14px;
+      text-align: left;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--input-bg, var(--bg));
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input::placeholder { color: var(--muted); }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,111,253,0.12);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-create {
+      background: linear-gradient(135deg, var(--accent), #9b8cff);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(124,111,253,0.3);
+      margin-bottom: 10px;
+    }
+    .btn-create:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124,111,253,0.4);
+    }
+    .btn-create:active { transform: translateY(0); }
+
+    .btn-join {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-join:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(79,195,247,0.08);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 440px) {
+      .box { padding: 28px 20px; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-
 <body>
 
+<button id="themeBtn" onclick="toggleTheme()">🌙</button>
+
 <div class="box">
-  <h2>🎵 Music Sync Room</h2>
+  <div class="icon-ring">🎵</div>
+  <h2>Music Sync Room</h2>
+  <p class="subtitle">Listen together, in real time</p>
 
-  <input id="username" placeholder="Enter your name">
+  <!-- Name field (shared) -->
+  <div class="field">
+    <label class="field-label">Your Name</label>
+    <input id="username" placeholder="Enter your name…" />
+  </div>
 
-  <button onclick="createRoom()">🚀 Create Room</button>
+  <!-- Create -->
+  <button class="btn btn-create" onclick="createRoom()">🚀 Create Room</button>
 
-  <input id="roomId" placeholder="Enter Room ID">
-  <button onclick="joinRoom()">🔗 Join Room</button>
+  <div class="divider"><span>or join existing</span></div>
+
+  <!-- Room ID -->
+  <div class="field">
+    <label class="field-label">Room ID</label>
+    <input id="roomId" placeholder="Paste room ID…" />
+  </div>
+
+  <button class="btn btn-join" onclick="joinRoom()">🔗 Join Room</button>
 </div>
 
 <script>
-function createRoom() {
-  const name = document.getElementById("username").value.trim();
-  if (!name) return alert("Enter name");
+  function toggleTheme() {
+    const light = document.body.classList.toggle('light');
+    document.getElementById('themeBtn').textContent = light ? '☀️' : '🌙';
+  }
 
-  const room = Math.random().toString(36).substring(2, 8);
+  function createRoom() {
+    const name = document.getElementById("username").value.trim();
+    if (!name) return alert("Please enter your name");
+    const room = Math.random().toString(36).substring(2, 8);
+    window.location.href = `room.html?name=${name}&room=${room}`;
+  }
 
-  window.location.href = `room.html?name=${name}&room=${room}`;
-}
-
-function joinRoom() {
-  const name = document.getElementById("username").value.trim();
-  const room = document.getElementById("roomId").value.trim();
-
-  if (!name || !room) return alert("Enter all fields");
-
-  window.location.href = `room.html?name=${name}&room=${room}`;
-}
+  function joinRoom() {
+    const name = document.getElementById("username").value.trim();
+    const room = document.getElementById("roomId").value.trim();
+    if (!name || !room) return alert("Please fill in all fields");
+    window.location.href = `room.html?name=${name}&room=${room}`;
+  }
 </script>
 
 </body>
