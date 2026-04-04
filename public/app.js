@@ -207,8 +207,9 @@ function toggleMute() {
 }
 
 // ==========================
-// 🎬 YOUTUBE FIX (FINAL)
+// 🎬 YOUTUBE SYNC (FINAL FIX)
 // ==========================
+
 let player;
 let playerReady = false;
 
@@ -234,16 +235,13 @@ function getVideoId(url) {
     }
 }
 
+// 🔥 LOAD VIDEO (SYNC TO ALL USERS)
 function loadYouTube() {
 
-    if (!playerReady) {
-        alert("Wait 2 seconds, player loading...");
-        return;
-    }
+    if (!playerReady) return alert("Wait for player...");
 
     const id = getVideoId(document.getElementById("youtubeUrl").value);
-
-    if (!id) return alert("Invalid link");
+       if (!id) return alert("Invalid link");
 
     player.loadVideoById(id);
     socket.emit("loadVideo", id);
