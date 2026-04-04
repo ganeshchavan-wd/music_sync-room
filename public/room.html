@@ -1,219 +1,353 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Music Sync Room</title>
-
-  <!-- 🌐 Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ── DARK (default) ── */
+    :root {
+      --bg:       #0e0f17;
+      --card:     #181926;
+      --border:   #2a2b3d;
+      --accent:   #7c6ffd;
+      --accent2:  #4fc3f7;
+      --text:     #e4e5f0;
+      --muted:    #6b6d85;
+      --input-bg: #0e0f17;
+      --radius:   14px;
+      --shadow:   none;
+      --mesh:     none;
+    }
+
+    /* ── LIGHT ── */
+    body.light {
+      --bg:       #eef0fa;
+      --card:     #ffffff;
+      --border:   #dcdff0;
+      --accent:   #5b4ff0;
+      --accent2:  #0ea5e9;
+      --text:     #16172b;
+      --muted:    #7b7e9a;
+      --input-bg: #f5f6fd;
+      --shadow:   0 2px 16px rgba(80,70,200,0.08), 0 1px 3px rgba(0,0,0,0.04);
+      --mesh:     radial-gradient(ellipse 60% 50% at 10% 0%, rgba(111,99,255,0.10) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 90% 100%, rgba(14,165,233,0.09) 0%, transparent 70%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: Arial;
-      padding: 20px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      background-image: var(--mesh);
+      color: var(--text);
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      transition: background 0.5s ease, color 0.5s ease;
+      transition: background-color 0.4s, color 0.4s;
     }
 
-    body.dark {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-    }
-
-    * {
-      transition: background 0.4s ease, color 0.4s ease;
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(12px);
-      padding: 25px;
-      border-radius: 15px;
-    }
-
-    body.dark .container {
-      background: rgba(0, 0, 0, 0.4);
-    }
-
-    #title {
-      text-align: center;
-      font-size: 36px;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(45deg, #00c853, #00e5ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    button {
-      padding: 8px 12px;
-      margin: 5px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      background: #539fce;
-      color: white;
-    }
-
-    #muteBtn {
-      background: rgb(164, 156, 154);
-    }
-
+    /* ── THEME BTN ── */
     #themeBtn {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
+      top: 18px; right: 18px;
+      width: 40px; height: 40px;
       border-radius: 50%;
-      background: black;
-      font-size: 20px;
-      border: none;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-size: 18px;
       cursor: pointer;
-      display: flex;
+      display: grid; place-items: center;
+      z-index: 999;
+      transition: transform 0.3s, box-shadow 0.3s, background 0.4s, border-color 0.4s;
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+    #themeBtn:hover { transform: rotate(15deg); box-shadow: 0 0 14px rgba(91,79,240,0.35); }
+
+    /* ── PAGE ── */
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── HEADER ── */
+    .header { text-align: center; margin-bottom: 32px; }
+
+    .header-icon { font-size: 36px; display: block; margin-bottom: 10px; }
+
+    h1 {
+      font-size: clamp(22px, 5vw, 34px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline { font-size: 13px; color: var(--muted); margin-top: 5px; }
+
+    /* ── ROOM BADGE ── */
+    #roomDisplay {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      gap: 6px;
+      font-size: 12px;
+      color: var(--accent2);
+      background: rgba(79,195,247,0.08);
+      border: 1px solid rgba(79,195,247,0.2);
+      border-radius: 100px;
+      padding: 4px 12px;
+      margin-top: 12px;
+    }
+    #roomDisplay::before {
+      content: '●'; font-size: 7px;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      transition: background 0.4s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .card:hover { border-color: var(--accent); }
+
+    /* Light card: gradient top border */
+    body.light .card {
+      border-top: 2.5px solid var(--accent);
     }
 
-    /* ✅ FIXED PLAYER */
-    #player {
-      width: 90%;
-      max-width: 900px;
-      height: 400px;
-      margin: 20px auto;
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── ROW ── */
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    /* ── INFO TEXT ── */
+    #owner { font-size: 14px; font-weight: 600; color: var(--text); }
+    #status { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── INPUT ── */
+    .url-input {
+      flex: 1; min-width: 180px;
+      padding: 10px 14px;
       border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.4s;
+    }
+    .url-input::placeholder { color: var(--muted); }
+    .url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,111,253,0.12);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 18px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-family: inherit;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), #9b8cff);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(124,111,253,0.25);
+    }
+    body.light .btn-accent {
+      background: linear-gradient(135deg, var(--accent), #7b6ef6);
+      box-shadow: 0 2px 12px rgba(91,79,240,0.28);
+    }
+    .btn-accent:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,111,253,0.38); }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-red { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-red:hover { border-color: #f87171; color: #f87171; }
+
+    /* ── PLAYER ── */
+    .player-wrap {
+      width: 100%; aspect-ratio: 16/9;
+      background: var(--input-bg);
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border);
+      margin-top: 16px; position: relative;
+      transition: background 0.4s, border-color 0.4s;
+    }
+    .player-wrap::before {
+      content: 'Load a video to begin';
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--muted);
+    }
+    #player { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* ── CREDITS ── */
+    .credits {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+      padding: 10px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: default;
       overflow: hidden;
+      transition: background 0.4s, border-color 0.4s;
     }
+    body.light .credits { background: linear-gradient(135deg, #f8f7ff, #f0f5ff); }
 
-    input {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 300px;
+    /* Dot indicator always visible */
+    .credits-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      transition: background 0.3s;
     }
+    .credits:hover .credits-dot { background: var(--accent); }
 
-    .center {
-      text-align: center;
-    }
-
-    #credits {
-      margin-top: 15px;
-      text-align: left;
+    /* label + chips hidden by default */
+    .credits-label {
+      font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
       opacity: 0;
-      transition: opacity 0.4s ease;
-      color: black;
+      transform: translateX(-6px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 100px;
+      border: 1px solid var(--border);
+      font-size: 12px; font-weight: 500;
+      color: var(--text); background: var(--card);
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.2s, color 0.2s, background 0.4s;
+      pointer-events: none;
     }
 
-    #credits:hover {
+    .credits:hover .credits-label,
+    .credits:hover .chip {
       opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .credits:hover .credits-label  { transition-delay: 0.00s; }
+    .credits:hover .chip:nth-child(3) { transition-delay: 0.07s; }
+    .credits:hover .chip:nth-child(4) { transition-delay: 0.13s; }
+
+    body.light .chip { box-shadow: 0 1px 4px rgba(80,70,200,0.07); }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(91,79,240,0.04); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 500px) {
+      .page { padding: 28px 14px 50px; }
+      .card { padding: 16px; }
+      .btn  { padding: 8px 14px; font-size: 12px; }
     }
 
-    .names {
-      font-size: 16px;
-      font-weight: bold;
-      color: #0b0d0d;
-      animation: floatText 2s ease-in-out infinite alternate;
-    }
-
-    body.dark .names {
-      color: #00ffcc;
-    }
-
-    @keyframes floatText {
-      from { transform: translateY(0px); }
-      to { transform: translateY(-5px); }
+    /* ── FADE IN ── */
+    .page > * { animation: fadeUp 0.5s ease both; }
+    .page > *:nth-child(1) { animation-delay: 0.05s; }
+    .page > *:nth-child(2) { animation-delay: 0.10s; }
+    .page > *:nth-child(3) { animation-delay: 0.15s; }
+    .page > *:nth-child(4) { animation-delay: 0.20s; }
+    .page > *:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
     }
   </style>
 </head>
-
 <body>
 
-<button onclick="toggleTheme()" id="themeBtn">🌙</button>
+<button id="themeBtn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
 
-<div class="container">
+<div class="page">
 
-<h2 id="title">🎵 Music Sync Room</h2>
+  <div class="header">
+    <span class="header-icon">🎵</span>
+    <h1>Music Sync Room</h1>
+    <p class="tagline">Listen together, in real time</p>
+    <p id="roomDisplay">Connecting…</p>
+  </div>
 
-<p id="roomDisplay" class="center"></p>
+  <div class="card">
+    <div class="card-title">Voice</div>
+    <div class="row">
+      <button class="btn btn-accent" onclick="startCall()">🎤 Start Voice</button>
+      <button class="btn btn-outline" onclick="toggleMute()" id="muteBtn">🔇 Mute</button>
+      <div style="flex:1;">
+        <div id="owner"></div>
+        <div id="status"></div>
+      </div>
+    </div>
+  </div>
 
-<div class="center">
-  <button onclick="startCall()">🎤 Start Voice</button>
-  <button onclick="toggleMute()" id="muteBtn">🔇 Mute</button>
+  <div class="card">
+    <div class="card-title">Playback</div>
+    <div class="row">
+      <input class="url-input" id="youtubeUrl" placeholder="Paste YouTube URL…"/>
+      <button class="btn btn-accent" onclick="loadYouTube()">Load</button>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <button class="btn btn-outline" onclick="playVideo()">▶ Play</button>
+      <button class="btn btn-red" onclick="pauseVideo()">⏸ Pause</button>
+    </div>
+    <div class="player-wrap">
+      <div id="player"></div>
+    </div>
+  </div>
+
+  <div class="credits">
+    <span class="credits-dot"></span>
+    <span class="credits-label">Made by</span>
+    <span class="chip">👩‍💻 Chinamyi Udata(Sis)</span>
+    <span class="chip">👨‍💻 Ganesh Chavan(Bro)</span>
+  </div>
+
 </div>
 
-<h3 id="owner" class="center"></h3>
-<p id="status" class="center"></p>
-
-<div class="center">
-  <input id="youtubeUrl" placeholder="Enter YouTube link">
-<button onclick="loadYouTube()" class="yt-btn" disabled>Load</button>
-<button onclick="playVideo()" class="yt-btn" disabled>Play</button>
-<button onclick="pauseVideo()" class="yt-btn" disabled>Pause</button>
-</div>
-
-<!-- ✅ FIXED PLAYER -->
-<div id="player" class="center"></div>
-
-<!-- 🔍 DEBUG TEXT (optional) -->
-<p id="ytStatus" class="center"></p>
-
-<div id="credits">
-  <p class="names">
-    Owner <br>
-    👩‍💻 Chinamyi Udata(Sis) <br>
-    👨‍💻 Ganesh Chavan(Bro)
-  </p>
-</div>
-
-</div>
-
-<!-- ✅ YOUTUBE API -->
-<script src="https://www.youtube.com/iframe_api"></script>
-
-<!-- ✅ SOCKET FROM RENDER -->
-<script src="https://music-sync-room.onrender.com/socket.io/socket.io.js"></script>
-
-<!-- ✅ PEER -->
+<script src="/socket.io/socket.io.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
-
 <script>
-  // 🌙 LOAD SAVED THEME
-  document.addEventListener("DOMContentLoaded", () => {
-    const savedTheme = localStorage.getItem("theme");
-
-    if (savedTheme === "light") {
-      document.body.classList.remove("dark");
-    } else {
-      document.body.classList.add("dark");
-    }
-
-    updateThemeIcon();
-  });
-
-  // 🔁 TOGGLE
   function toggleTheme() {
-    document.body.classList.toggle("dark");
-
-    const isDark = document.body.classList.contains("dark");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-
-    updateThemeIcon();
+    const isLight = document.body.classList.toggle('light');
+    document.getElementById('themeBtn').textContent = isLight ? '☀️' : '🌙';
   }
 
-  // 🔄 ICON UPDATE
-  function updateThemeIcon() {
-    const btn = document.getElementById("themeBtn");
-    if (!btn) return;
-
-    btn.innerText = document.body.classList.contains("dark")
-      ? "☀️"
-      : "🌙";
-  }
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
 </script>
-<!-- ✅ YOUR MAIN JS -->
 <script src="app.js"></script>
 
 </body>
